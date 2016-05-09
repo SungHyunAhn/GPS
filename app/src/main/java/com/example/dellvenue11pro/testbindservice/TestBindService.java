@@ -20,7 +20,7 @@ public class TestBindService extends Service {
         }
     }
 
-    // 난수 생성용 변수
+    // 난수 생성용 변수aa
     private final Random num = new Random();
 
     // 난수 생성 메소드
