@@ -25,6 +25,7 @@ public class TestBindService extends Service {
     private String locationProvider;
     // 컴포넌트로 반환되는 IBinder
     private final IBinder mBinder = new LocalBinder();
+    public LocationListener mLocationListener;
 
     // IBinder 상속하여 이너클래스 생성, 이 클래스로 컴포넌트와 서비스를 bind한다
     public class LocalBinder extends Binder{
@@ -56,10 +57,38 @@ public class TestBindService extends Service {
         return altitude;
     }
 
+    public void removeRequest(){
+        try {
+            locationManager.removeUpdates(mLocationListener);
+            Log.e("removeUpdates","Success");
+        }
+        catch (SecurityException e){
+            Log.e("removeUpdates","Failed");
+        }
+    }
+
     @Override
     public void onCreate(){
         super.onCreate();
         Toast.makeText(TestBindService.this, "Create Service", Toast.LENGTH_SHORT).show();
+
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        if(!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER))
+            Toast.makeText(TestBindService.this, "GPS is OFF, Please GPS ON", Toast.LENGTH_SHORT).show();
+
+        mLocationListener = new myLocationListener();
+
+        locationProvider = locationManager.getBestProvider(getCriteria(), true);
+
+        getLastLocation();
+
+        try {
+            locationManager.requestLocationUpdates(locationProvider, 5000, 0, mLocationListener);
+            Log.e("requestLocationUpdate", "Permission Allowed");
+        }
+        catch (SecurityException e) {
+            Log.e("requestLocationUpdate", "Permission Denied");
+        }
     }
 
     // 마지막 위치를 받아와 출력하는 메소드
@@ -100,63 +129,6 @@ public class TestBindService extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         Toast.makeText(TestBindService.this, "Bind Service", Toast.LENGTH_SHORT).show();
-
-        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        if(!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER))
-            Toast.makeText(TestBindService.this, "GPS is OFF, Please GPS ON", Toast.LENGTH_SHORT).show();
-
-        locationProvider = locationManager.getBestProvider(getCriteria(), true);
-
-        getLastLocation();
-
-        try {
-            locationManager.requestLocationUpdates(locationProvider, 5000, 0, new LocationListener() {
-                @Override
-                public void onLocationChanged(Location location) {
-                    Toast.makeText(TestBindService.this, "Location Changed", Toast.LENGTH_SHORT).show();
-
-                    latitude = location.getLatitude();
-                    longtitude = location.getLongitude();
-                    altitude = location.getAltitude();
-
-                    Log.e("onLocationChanged", "bestProvider : " + locationProvider);
-                    Log.e("getData", "lat = " + latitude + " lng = " + longtitude + " alt = " + altitude);
-                }
-
-                @Override
-                public void onStatusChanged(String provider, int status, Bundle extras) {
-                    switch (status) {
-                        case LocationProvider.AVAILABLE:
-                            //Toast.makeText(TestBindService.this, provider +" Available", Toast.LENGTH_SHORT).show();
-                            Log.e("LocationProvider : ", provider + " Available");
-                            break;
-                        case LocationProvider.OUT_OF_SERVICE:
-                            //Toast.makeText(TestBindService.this, provider +" Out of Service", Toast.LENGTH_SHORT).show();
-                            Log.e("LocationProvider : ", provider + " Out of Service");
-                            break;
-                        case LocationProvider.TEMPORARILY_UNAVAILABLE:
-                            //Toast.makeText(TestBindService.this, provider +" Service Stop", Toast.LENGTH_SHORT).show();
-                            Log.e("LocationProvider : ", provider + " Service Stop");
-                            break;
-                    }
-                }
-
-                @Override
-                public void onProviderEnabled(String provider) {
-                    Toast.makeText(TestBindService.this, provider + " Provider Enabled", Toast.LENGTH_SHORT).show();
-                }
-
-                @Override
-                public void onProviderDisabled(String provider) {
-                    Toast.makeText(TestBindService.this, provider + " Provider Disenabled", Toast.LENGTH_SHORT).show();
-                }
-            });
-            Log.e("requestLocationUpdate", "Permission Allowed");
-        }
-        catch (SecurityException e) {
-            Log.e("requestLocationUpdate", "Permission Denied");
-        }
-
         return mBinder;
     }
 
@@ -170,5 +142,47 @@ public class TestBindService extends Service {
     public void onDestroy() {
         Toast.makeText(TestBindService.this, "Destroy Service", Toast.LENGTH_SHORT).show();
         super.onDestroy();
+    }
+
+    public class myLocationListener implements LocationListener {
+        @Override
+        public void onLocationChanged(Location location) {
+            Toast.makeText(TestBindService.this, "Location Changed", Toast.LENGTH_SHORT).show();
+
+            latitude = location.getLatitude();
+            longtitude = location.getLongitude();
+            altitude = location.getAltitude();
+
+            Log.e("onLocationChanged", "bestProvider : " + locationProvider);
+            Log.e("getData", "lat = " + latitude + " lng = " + longtitude + " alt = " + altitude);
+        }
+
+        @Override
+        public void onStatusChanged(String provider, int status, Bundle extras) {
+            switch (status) {
+                case LocationProvider.AVAILABLE:
+                    //Toast.makeText(TestBindService.this, provider +" Available", Toast.LENGTH_SHORT).show();
+                    Log.e("LocationProvider : ", provider + " Available");
+                    break;
+                case LocationProvider.OUT_OF_SERVICE:
+                    //Toast.makeText(TestBindService.this, provider +" Out of Service", Toast.LENGTH_SHORT).show();
+                    Log.e("LocationProvider : ", provider + " Out of Service");
+                    break;
+                case LocationProvider.TEMPORARILY_UNAVAILABLE:
+                    //Toast.makeText(TestBindService.this, provider +" Service Stop", Toast.LENGTH_SHORT).show();
+                    Log.e("LocationProvider : ", provider + " Service Stop");
+                    break;
+            }
+        }
+
+        @Override
+        public void onProviderEnabled(String provider) {
+            Toast.makeText(TestBindService.this, provider + " Provider Enabled", Toast.LENGTH_SHORT).show();
+        }
+
+        @Override
+        public void onProviderDisabled(String provider) {
+            Toast.makeText(TestBindService.this, provider + " Provider Disenabled", Toast.LENGTH_SHORT).show();
+        }
     }
 }
