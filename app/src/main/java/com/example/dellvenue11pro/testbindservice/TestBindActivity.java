@@ -22,14 +22,16 @@ public class TestBindActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_test_bind);
 
-        //첫번째 버튼, 서비스에서 생성한 랜덤숫자를 받아와 Toast로 출력
+        //첫번째 버튼, 서비스에서 GPS 정보 받아옴
         Button btn = (Button) findViewById(R.id.button);
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (mBound) {
-                    int num = mService.getRandomNum();
-                    Toast.makeText(TestBindActivity.this, "Num = " + num, Toast.LENGTH_SHORT).show();
+                    double latitude = mService.getLatitude();
+                    double longtitude = mService.getLongtitude();
+                    double alititude = mService.getAltitude();
+                    Toast.makeText(TestBindActivity.this, "lat = " + latitude + "\nlng = " + longtitude + "\nalt = " + alititude, Toast.LENGTH_SHORT).show();
                 }
             }
         });
