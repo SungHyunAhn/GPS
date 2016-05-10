@@ -149,6 +149,7 @@ public class TestBindService extends Service {
         public void onLocationChanged(Location location) {
             Toast.makeText(TestBindService.this, "Location Changed", Toast.LENGTH_SHORT).show();
 
+            // 위치정보 획득
             latitude = location.getLatitude();
             longtitude = location.getLongitude();
             altitude = location.getAltitude();

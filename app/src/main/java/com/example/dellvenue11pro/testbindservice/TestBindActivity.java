@@ -43,7 +43,7 @@ public class TestBindActivity extends Activity {
             public void onClick(View v) {
                 if (mBound) {
                     mBound = false;
-                    unbindService(mConn);
+                    unbind(mConn);
                 }
             }
         });
@@ -75,8 +75,17 @@ public class TestBindActivity extends Activity {
     public void onStop(){
         super.onStop();
         if(mBound){
-            unbindService(mConn);
+            // onStop 호출될 때 unbind 호출 안하면 화면 꺼져도 서비스는 계속 작동(=위치 계속 받아옴)
+            // 다른 앱을 실행하거나, 화면이 꺼지면 onStop()이 호출된다
+            //unbind(mConn);
         }
+    }
+
+    // 서비스 bind 해제
+    public void unbind(ServiceConnection connection){
+        unbindService(connection);
+        // 위치정보 갱신 정지 요청, 미사용시 서비스는 무한정으로 위치정보를 받아옴
+        mService.removeRequest();
     }
 
     // ServiceConnection 객체 생성으로 bind타입 서비스와 액티비티간 연결
